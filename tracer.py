@@ -1,11 +1,31 @@
 import sys
+import copy
+
+execution_log = []
+last_line = None
 
 def tracer(frame, event, arg):
-    if event in ("line", "call"):
-        lineno = frame.f_lineno
-        local_vars = frame.f_locals
-        print(f"Executing line : {lineno} : {local_vars}")
+    global last_line
 
+    if frame.f_globals.get("__name__") != "__main__":
+        return tracer
+    
+    frame.f_trace_opcodes = True
+    
+    if event == "line":
+        last_line = frame.f_lineno
+        snapshot_before = copy.deepcopy(frame.f_locals)
+        execution_log.append({
+            "before" : snapshot_before,
+            "lineno" : last_line,
+            "after" : None
+        })
+
+    if event == "opcode" and frame.f_lineno == last_line: 
+        snapshot_after = copy.deepcopy(frame.f_locals)
+        execution_log[-1]["after"] = snapshot_after
+        
+        # print(f"Executing line : {lineno} : {local_vars}")
     return tracer
 
 '''
@@ -33,11 +53,22 @@ when I exec() a multi-line string, line numbers are relative to that string(star
 frame.f_locals -
 a dictionary of the frame's local variables and their current values. It shoes the state RIGHT NOW, at the moment the trace event is fired. 
 
+Output ->
+Executing line : 1 : {'code': 'list1 = [1,2,3]\nlist2 = [4,5,6]\nlist1.extend(list2)\n'}
+Executing line : 2 : {'code': 'list1 = [1,2,3]\nlist2 = [4,5,6]\nlist1.extend(list2)\n', 'list1': [1, 2, 3]}
+Executing line : 3 : {'code': 'list1 = [1,2,3]\nlist2 = [4,5,6]\nlist1.extend(list2)\n', 'list1': [1, 2, 3], 'list2': [4, 5, 6]}
+
 '''
 
 def run_code(code):
+    global execution_log, last_line
+    execution_log = []
+    last_line = None
+
+    compiled = compile(code, "<user_code>", "exec")
+
     sys.settrace(tracer)
-    exec(code)
+    exec(compiled, {"__name__" : "__main__"}, {})
     sys.settrace(None)
 
 
@@ -47,13 +78,18 @@ Dyanmic code execution means, it allows for the execution of python code that is
 '''
 
 
-code = '''list1 = [1,2,3]
+code = '''
+list1 = [1,2,3]
 list2 = [4,5,6]
 list1.extend(list2)
 '''
 
 run_code(code)
 
+for step, snap in enumerate(execution_log, start=1):
+    print(f"\nSTEP {step}: executing line {snap['lineno']}:")
+    for name, value in snap["after"].items():
+        print(f"   {name} = {value}")
 
 '''
 TRACING :
