@@ -3,6 +3,8 @@ from flask_cors import CORS
 import sys
 import copy
 import traceback
+import inspect
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -16,23 +18,80 @@ def tracer(frame, event, arg):
     if frame.f_globals.get("__name__") != "__main__":
         return tracer
     
-    frame.f_trace_opcodes = True
-    
-    if event == "line":
-        last_line = frame.f_lineno
-        snapshot_before = copy.deepcopy(frame.f_locals)
+    try:
+        frame.f_trace_opcodes = True
+    except Exception:
+        pass
+
+    def snap_locals():
+        try:
+            return copy.deepcopy(frame.f_locals)
+        except Exception:
+            return dict(frame.f_locals)
+        
+    if event == "call":
+        func_name = frame.f_code.co_name
+        lineno = frame.f_lineno
         execution_log.append({
-            "before" : snapshot_before,
-            "lineno" : last_line,
+            "event" : "call",
+            "func" : func_name,
+            "lineno" : lineno,
+            "before" : {k: v for k, v in snap_locals().items()},
             "after" : None, 
             "code" : None
         })
+        return tracer
+    
+    if event == "line":
+        last_line = frame.f_lineno
+        try:
+            before = snap_locals()
+        except Exception:
+            before = dict(frame.f_locals)
+        execution_log.append({
+            "event" : "line",
+            "before" : {k: v for k, v in before.items()},
+            "lineno" : last_line,
+            "after" : None, 
+            "code" : None,
+            "func" : frame.f_code.co_name
+        })
+        return tracer
 
-    if event == "opcode" and frame.f_lineno == last_line: 
-        snapshot_after = copy.deepcopy(frame.f_locals)
-        execution_log[-1]["after"] = snapshot_after
-        
+    if event == "opcode":
+        if last_line is not None and frame.f_lineno == last_line and execution_log:
+            try:
+                after = snap_locals()
+            except Exception:
+                after = dict(frame.f_locals)
+
+                for entry in reversed(execution_log):
+                    if entry.get("after") is None:
+                        entry["after"] = {k: v for k, v in after.items()}
+                        break
+        return tracer
+    
+    if event == "return":
+        ret = arg
+        lineno = frame.f_lineno
+        execution_log.append({
+            "event" : "return",
+            "lineno" : lineno,
+            "func" : frame.f_code.co_name,
+            "return_value" : ret, 
+            "before" : None,
+            "after" : None,
+            "code" : None
+        })
+        return tracer
+    
     return tracer
+
+def safe_json(value):
+    try:
+        return json.loads(json.dumps(value, default=lambda o: repr(o)))
+    except:
+        return repr(value)
 
 def run_code(code):
     global execution_log, last_line
@@ -42,15 +101,35 @@ def run_code(code):
     try:
         compiled = compile(code, "<user_code>", "exec")
         sys.settrace(tracer)
-        exec(compiled, {"__name__" : "__main__"}, {})
-        sys.settrace(None)
+        try:
+            exec(compiled, {"__name__" : "__main__"}, {})
+        finally:
+            sys.settrace(None)
 
         code_lines = code.split('\n')
         for step in execution_log:
-            if 1 <= step['lineno'] <= len(code_lines):
-                step['code'] = code_lines[step['lineno'] - 1]
+            ln = step.get("lineno")
+            if isinstance(ln, int) and 1 <= ln <= len(code_lines):
+                step['code'] = code_lines[ln - 1]
+            else:
+                step['code'] = None
 
-        return {"success" : True, "steps": execution_log}
+        safe_steps = []
+        for s in execution_log:
+            ss = {}
+            for k, v in s.items():
+                if k in ("before", "after"):
+                    if v is None:
+                        ss[k] = None
+                    else:
+                        ss[k] = {name : safe_json(val) for name, val in v.items()}
+                elif k == "return_value":
+                    ss[k] = safe_json(v)
+                else:
+                    ss[k] = v
+            safe_steps.append(ss)
+
+        return {"success" : True, "steps": safe_steps}
 
     except Exception as e:
         sys.settrace(None)
