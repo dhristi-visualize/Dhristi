@@ -5,6 +5,11 @@ import copy
 import traceback
 import inspect
 import json
+import math 
+import ast
+import numpy as np
+import sympy as sp
+import torch
 
 app = Flask(__name__)
 CORS(app)
@@ -23,11 +28,25 @@ def tracer(frame, event, arg):
     except Exception:
         pass
 
+    def clean_vars(variables):
+        cleaned = {}
+        for k, v in variables.items():
+            if k.startswith("__"):
+                continue
+            if callable(v):
+                continue
+            if isinstance(v, type(math)):
+                continue
+            cleaned[k] = v
+
+        return cleaned
+
     def snap_locals():
         try:
-            return copy.deepcopy(frame.f_locals)
+            raw = copy.deepcopy(frame.f_locals)
         except Exception:
-            return dict(frame.f_locals)
+            raw = dict(frame.f_locals)
+        return clean_vars(raw)
         
     if event == "call":
         func_name = frame.f_code.co_name
@@ -100,22 +119,121 @@ def tracer(frame, event, arg):
     
     return tracer
 
-def safe_json(value):
+def find_candidate_expressions(source):
+    '''
+    Docstring for find_candidate_expressions
+    Parse source and return mapping lineno -> expression string
+    We look for Assign and Return nodes whose value is an expression (BinOp / Call / UnaryOp)
+    :param source: Description
+    '''
+    tree = ast.parse(source)
+    formulas = {} #lineno -> {"expr" : stc_str, "latex" : latex_str_or_none}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Assign, ast.AnnAssign, ast.Return)):
+            val = node.value if isinstance(node, ast.Assign) or isinstance(node, ast.AnnAssign) else node.value
+            if val is None:
+                continue
+            #consider expressions of interest
+            if isinstance(val, (ast.BinOp, ast.UnaryOp, ast.Call, ast.BoolOp, ast.Compare)):
+                try:
+                    src = ast.unparse(val)
+                except Exception:
+                    #fallback : try to reconstruct minimal string
+                    src = "<expr>"
+                
+                latex = None
+                if sp is not None:
+                    #try to simplify the expression string into a sympy expression
+                    try:
+                        sym = sp.sympify(src)
+                        latex = sp.latex(sym)
+                    except Exception:
+                        latex = None
+
+                formulas[getattr(node, "lineno", None)] = {"expr" : src, "latex" : latex}
+    
+    return formulas
+
+
+
+def safe_json(value, max_elements=30):
+
     try:
+        #numpy arrays
+        if np is not None and isinstance(value, np.ndarray):
+            size = value.size
+            info = {
+                "type" : "ndarray",
+                "values" : value.tolist()
+            }
+            if size <= max_elements:
+                #safe to send full values
+                info["values"] = value.tolist()
+            else:
+                try:
+                    flat = value.ravel()
+                    info["summary"] = {
+                        "size" : int(size),
+                        "min" : float(flat.min()),
+                        "max" : float(flat.max()),
+                        "mean" : float(flat.mean()),
+                        "sample" : flat[:min(6, size)].tolist()
+                    }
+                except Exception:
+                    info["repr"] = repr(value)
+            return info
+
+        #torch tensors
+        if torch is not None and isinstance(value, torch.Tensor):
+            t = value
+            info = {
+                "__torch_tensor__" : True,
+                "shape" : list(t.size()),
+                "dtype" : str(t.dtype)
+            }
+            try:
+                numel = t.numel()
+                if numel <= max_elements:
+                    info["values"] = t.cpu().detach().tolist()
+                else:
+                    flat = t.cpu().detach().view(-1)
+                    info["summary"] = {
+                        "size" : int(numel),
+                        "min" : float(flat.min().item()),
+                        "max" : float(flat.max().item()),
+                        "mean" : float(flat.float().mean().item()),
+                        "sample" : flat[:min(6, numel)].tolist()
+                    }
+            except Exception:
+                info["repr"] = repr(value)
+            return info
+    
         return json.loads(json.dumps(value, default=lambda o: repr(o)))
-    except:
+    
+    except Exception:
         return repr(value)
+
 
 def run_code(code):
     global execution_log, last_line
     execution_log = []
     last_line = None
 
+    formula_map = find_candidate_expressions(code)
+
     try:
         compiled = compile(code, "<user_code>", "exec")
+        sandbox_globals = {
+                "__name__" : "__main__",
+                "np" : np,
+                "torch" : torch,
+                "sp" : sp,
+                "math" : math,
+                "__builtins__" : __builtins__
+            }
         sys.settrace(tracer)
         try:
-            exec(compiled, {"__name__" : "__main__"}, {})
+            exec(compiled, sandbox_globals, sandbox_globals)
         finally:
             sys.settrace(None)
 
@@ -155,6 +273,11 @@ def run_code(code):
                     ss[k] = safe_json(v)
                 else:
                     ss[k] = v
+            ln = s.get("lineno")
+            if ln and ln in formula_map:
+                ss["formula"] = formula_map[ln]
+            else:
+                ss["formula"] = None
             safe_steps.append(ss)
 
         return {"success" : True, "steps": safe_steps}
