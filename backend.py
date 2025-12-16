@@ -155,7 +155,6 @@ def find_candidate_expressions(source):
     return formulas
 
 
-
 def safe_json(value, max_elements=30):
 
     try:

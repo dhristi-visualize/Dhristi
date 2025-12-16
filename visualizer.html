@@ -130,7 +130,7 @@
           return (
             <div className="space-y-1">
               <div className="text-xs text-gray-400 mb-2">
-                Shape: {rows} × {cols}
+                Shape: {rows} x {cols}
               </div>
               <div className="inline-block border-2 border-green-500 rounded">
                 {matrix.map((row, i) => (
@@ -246,6 +246,8 @@ z = x + np.array([10,20])`);
             switch (type) {
               case 'array':
                 return <ArrayVisualization arr={value} name={name} />;
+              case 'ndarray':
+                return <MatrixVisualization matrix={value} name={name} />;
               case 'dict':
                 return <DictVisualization dict={value} />;
               case 'matrix':
