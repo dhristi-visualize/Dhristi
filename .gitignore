@@ -215,3 +215,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#files
+beginner_tracer.py
+Monolithic_backend.py
