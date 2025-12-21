@@ -36,6 +36,8 @@ window.Components.Controls = ({ currentStep, setCurrentStep, executionLog, autoP
       {currentStepData && (
         <div className="mb-4 bg-yellow-500/10 border-l-4 border-yellow-500 p-3 rounded">
           <div className="text-xs text-yellow-400 mb-1 font-semibold">
+            {currentStepData.event === "call" && `CALL ${currentStepData.func}()`}
+            {currentStepData.event === "return" && `RETURN ${currentStepData.func}()`}
             {currentStepData.event === "line" && `Line ${currentStepData.lineno}`}
           </div>
           {currentStepData.code && <code className="text-sm font-mono text-white">{currentStepData.code}</code>}
@@ -45,7 +47,7 @@ window.Components.Controls = ({ currentStep, setCurrentStep, executionLog, autoP
       <div className="bg-slate-900 rounded-lg p-3 font-mono text-xs overflow-x-auto">
         {codeLines.map((line, idx) => {
           const lineNo = idx + 1;
-          const isCurrentLine = currentStepData && currentStepData.lineno === lineNo;
+          const isCurrentLine = currentStepData && currentStepData.lineno === lineNo && currentStepData.event === "line";
           const isExecuted = executionLog.some((step, stepIdx) => step.lineno === lineNo && stepIdx <= currentStep);
           
           return (

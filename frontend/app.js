@@ -62,6 +62,7 @@ const PythonVisualizer = () => {
       }
     } catch (err) {
       setError('Failed to connect to backend. Make sure Flask server is running on port 5000.');
+      console.error('Error:', err);
     }
     
     setIsRunning(false);
@@ -74,7 +75,6 @@ const PythonVisualizer = () => {
       <div className="max-w-[1800px] mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-white mb-2">Python Execution Visualizer</h1>
-          <p className="text-purple-200">Enhanced with NumPy support</p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">

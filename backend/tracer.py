@@ -2,15 +2,17 @@ import sys
 import copy
 import math
 
-#shared state object
-state = {
-    "execution_log" : [],
-    "last_line" : None
-}
+# #shared state object
+# state = {
+#     "execution_log" : [],
+#     "last_line" : None
+# }
 
+execution_log = []
+last_line = None
 
 def tracer(frame, event, arg):
-    # global last_line 
+    global last_line 
 
     if frame.f_globals.get("__name__") != "__main__":
         return tracer
@@ -25,9 +27,9 @@ def tracer(frame, event, arg):
         for k, v in variables.items():
             if k.startswith("__"):
                 continue
-            if callable(v):
+            if callable(v): # -> to check if an object can be called (checking if v is callable, if it is, then continue)
                 continue
-            if isinstance(v, type(math)):
+            if isinstance(v, type(math)): # -> checks whether an object or variable is an instance of a specified type or class. (checks whether v is of type math)
                 continue
             cleaned[k] = v
         return cleaned
@@ -42,7 +44,7 @@ def tracer(frame, event, arg):
     if event == "call":
         func_name = frame.f_code.co_name
         lineno = frame.f_lineno
-        state["execution_log"].append({
+        execution_log.append({
             "event": "call",
             "func": func_name,
             "lineno": lineno,
@@ -54,20 +56,20 @@ def tracer(frame, event, arg):
     
     if event == "line":
         # providing "after" state for the PREVIOUS line
-        if state["last_line"] is not None and state["execution_log"]:
+        if last_line is not None and execution_log:
             after = snap_locals()
-            for entry in reversed(state["execution_log"]):
-                if entry.get("lineno") == state["last_line"] and entry.get("after") is None:
+            for entry in reversed(execution_log):
+                if entry.get("lineno") == last_line and entry.get("after") is None:
                     entry["after"] = after
                     break
 
         # log the CURRENT line (with "before" state)
-        state["last_line"] = frame.f_lineno
+        last_line = frame.f_lineno
         before = snap_locals()
-        state["execution_log"].append({
+        execution_log.append({
             "event": "line",
             "before": before,
-            "lineno": state["last_line"],
+            "lineno": last_line,
             "after": None, 
             "code": None,
             "func": frame.f_code.co_name
@@ -75,27 +77,25 @@ def tracer(frame, event, arg):
         return tracer
 
     if event == "opcode":
-        if state["last_line"] is not None and frame.f_lineno == state["last_line"] and state["execution_log"]:
+        if last_line is not None and frame.f_lineno == last_line and execution_log:
             after = snap_locals()
-            for entry in reversed(state["execution_log"]):
+            for entry in reversed(execution_log):
                 if entry.get("after") is None:
                     entry["after"] = after
                     break
         return tracer
     
     if event == "return":
-        if state["last_line"] is not None and state["execution_log"]:
+        if last_line is not None and execution_log:
             after = snap_locals()
-            for entry in reversed(state["execution_log"]):
-                # if entry.get("lineno") == state["last_line"] and entry.get("after") is None:
-                #     entry["after"] = after
-                if entry["after"] == "line" and entry["after"] is None:
+            for entry in reversed(execution_log):
+                if entry.get("event") == "line" and entry.get("after") is None:
                     entry["after"] = after
                     break
         
         ret = arg
         lineno = frame.f_lineno
-        state["execution_log"].append({
+        execution_log.append({
             "event": "return",
             "lineno": lineno,
             "func": frame.f_code.co_name,

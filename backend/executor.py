@@ -5,13 +5,13 @@ import torch
 import sympy as sp
 import traceback
 
-from tracer import tracer, state
+import tracer
 from ast_utils import find_candidate_expressions
 from serializer import safe_json
 
 def run_code(code):
-    state["execution_log"] = []
-    state["last_line"] = None
+    tracer.execution_log.clear()
+    tracer.last_line = None
 
     formula_map = find_candidate_expressions(code)
 
@@ -26,15 +26,15 @@ def run_code(code):
             "__builtins__": __builtins__
         }
         
-        sys.settrace(tracer)
+        sys.settrace(tracer.tracer)
         try:
             exec(compiled, sandbox_globals, sandbox_globals)
         finally:
             sys.settrace(None)
 
-            if state["execution_log"]:
+            if tracer.execution_log:
                 final_locals = {}
-                for entry in reversed(state["execution_log"]):
+                for entry in reversed(tracer.execution_log):
                     if entry.get("after") and entry["event"] == "line":
                         final_locals = entry["after"]
                         break
@@ -42,14 +42,14 @@ def run_code(code):
                         final_locals = entry["before"]
                         break
                 
-                for entry in reversed(state["execution_log"]):
+                for entry in reversed(tracer.execution_log):
                     if entry.get("event") == "line" and entry.get("after") is None:
                         entry["after"] = final_locals
                         break
 
         # Add code lines
         code_lines = code.split('\n')
-        for step in state["execution_log"]:
+        for step in tracer.execution_log:
             ln = step.get("lineno")
             if isinstance(ln, int) and 1 <= ln <= len(code_lines):
                 step['code'] = code_lines[ln - 1]
@@ -58,7 +58,7 @@ def run_code(code):
 
         # Convert to JSON-safe format
         safe_steps = []
-        for s in state["execution_log"]:
+        for s in tracer.execution_log:
             ss = {
                 "event": s.get("event"),
                 "func": s.get("func"),
