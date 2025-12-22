@@ -34,17 +34,20 @@ def safe_json(value, max_elements=30):
         numel = t.numel()
         
         if numel <= max_elements:
+            tensor_value = t.cpu().detach().tolist()
             return {
-                "__torch_tensor__": True,
+                "type": "torchtensor",
+                # "__torch_tensor__": True,
                 "shape": list(t.size()),
                 "dtype": str(t.dtype),
-                "values": t.cpu().detach().tolist()
+                "values": tensor_value
             }
         else:
             try:
                 flat = t.cpu().detach().view(-1)
                 return {
-                    "__torch_tensor__": True,
+                    "type": "torchtensor",
+                    # "__torch_tensor__": True,
                     "shape": list(t.size()),
                     "dtype": str(t.dtype),
                     "summary": {

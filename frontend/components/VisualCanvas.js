@@ -9,6 +9,56 @@ window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, chang
     switch (type) {
       case 'array': return <ArrayVisualization arr={value} name={name} />;
       case 'ndarray': return <MatrixVisualization matrix={value} name={name} />;
+      case 'tensor_scalar':
+        // Scalar tensor - show as number
+        const scalarValue = Array.isArray(value.values) ? value.values[0] : value.values;
+        return (
+          <div>
+            <span className="font-mono text-orange-400 text-xl font-bold">{scalarValue}</span>
+            <span className="text-xs text-gray-500 ml-2">torch.{value.dtype}</span>
+          </div>
+        );
+      case 'tensor_1d':
+        // 1D tensor - show as array
+        return (
+          <div>
+            <div className="text-xs text-gray-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <ArrayVisualization arr={value.values} name={name} />
+          </div>
+        );
+      case 'tensor_2d':
+        // 2D tensor - show as matrix
+        return (
+          <div>
+            <div className="text-xs text-gray-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <MatrixVisualization matrix={{ type: 'ndarray', values: value.values }} name={name} />
+          </div>
+        );
+      case 'tensor_nd':
+        // Higher dimensional - show info
+        return (
+          <div className="space-y-2">
+            <div className="text-xs text-yellow-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
+              {value.summary ? (
+                <>
+                  <div>Size: {value.summary.size}</div>
+                  <div>Min: {value.summary.min?.toFixed(4)}</div>
+                  <div>Max: {value.summary.max?.toFixed(4)}</div>
+                  <div>Mean: {value.summary.mean?.toFixed(4)}</div>
+                </>
+              ) : (
+                <div>High-dimensional tensor</div>
+              )}
+            </div>
+          </div>
+        );
       case 'matrix': return <MatrixVisualization matrix={value} name={name} />;
       case 'dict': return <DictVisualization dict={value} />;
       case 'string': return <span className="font-mono text-green-400 text-lg">"{value}"</span>;

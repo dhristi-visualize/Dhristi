@@ -11,7 +11,7 @@ const { renderFormula } = window.Utils;
 const { useState, useEffect } = React;
 
 const PythonVisualizer = () => {
-  const [code, setCode] = useState(`import numpy as np\n\nlist1 = [1, 2, 3]\nx = np.array([[1.0, 2.0], [3.0, 4.0]])`);
+  const [code, setCode] = useState(`import numpy as np\n\nlist1 = [1, 2, 3]\nx = np.array([[1.0, 2.0], [3.0, 4.0]])\npass`);
   const [executionLog, setExecutionLog] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
