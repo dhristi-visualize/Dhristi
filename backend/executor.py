@@ -5,7 +5,7 @@ import torch
 import sympy as sp
 import traceback
 
-# Import all the modules you want to support
+# Import all the modules 
 import abc
 import array
 import bisect
@@ -38,12 +38,14 @@ import unittest
 import tracer
 from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
+from nn_extractor import extract_sequential_models
 
 def run_code(code):
     tracer.execution_log.clear()
     tracer.last_line = None
 
     formula_map = find_candidate_expressions(code)
+    nn_models = extract_sequential_models(code)
 
     try:
         future_flags = get_future_flags(code)
@@ -110,6 +112,14 @@ def run_code(code):
                         entry["after"] = final_locals
                         break
 
+        lines = code.rstrip().split("\n")
+        last = lines[-1]
+
+        if last and not last.startswith(("return", "print")):
+            lines[-1] = f"__expr_result__ = {last}"
+
+        code = "\n".join(lines)
+
         # Add code lines
         code_lines = code.split('\n')
         for step in tracer.execution_log:
@@ -149,7 +159,11 @@ def run_code(code):
             
             safe_steps.append(ss)
 
-        return {"success": True, "steps": safe_steps}
+        return {
+            "success": True, 
+            "steps": safe_steps, 
+            "nn_models" : nn_models
+        }
 
     except Exception as e:
         sys.settrace(None)
