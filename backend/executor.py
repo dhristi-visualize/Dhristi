@@ -4,41 +4,13 @@ import numpy as np
 import torch
 import sympy as sp
 import traceback
-
-# Import all the modules 
-import abc
-import array
-import bisect
-import calendar
-import cmath
-import collections
-import copy as copy_module
-import datetime
-import decimal
-import doctest
-import fractions
-import functools
-import __future__
-import hashlib
-import heapq
-import io
-import itertools
-import json
-import locale
-import operator
-import pickle
-import pprint
-import random
-import re
-import string
 import types
-import typing
-import unittest
 
 import tracer
 from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
 from nn_extractor import extract_sequential_models
+from imports import STDLIB_MODULES
 
 def run_code(code):
     tracer.execution_log.clear()
@@ -59,33 +31,7 @@ def run_code(code):
             "sp": sp,
             "math": math,
             #Standard library
-            "abc": abc,
-            "array": array,
-            "bisect": bisect,
-            "calendar": calendar,
-            "cmath": cmath,
-            "collections": collections,
-            "copy": copy_module,
-            "datetime": datetime,
-            "decimal": decimal,
-            "doctest": doctest,
-            "fractions": fractions,
-            "functools": functools,
-            "hashlib": hashlib,
-            "heapq": heapq,
-            "io": io,
-            "itertools": itertools,
-            "json": json,
-            "locale": locale,
-            "operator": operator,
-            "pickle": pickle,
-            "pprint": pprint,
-            "random": random,
-            "re": re,
-            "string": string,
-            "types": types,
-            "typing": typing,
-            "unittest": unittest,
+            **STDLIB_MODULES
         }
         
         sys.settrace(tracer.tracer)
