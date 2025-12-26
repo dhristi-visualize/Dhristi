@@ -1,12 +1,11 @@
-# 🐍 Python Execution Visualizer
+# Python Execution Visualizer
 
 A web-based tool to visualize Python code execution step-by-step.
 
 ---
 
 ## 🚀 Execution Steps  
-
-📥 **1. Clone the repository**
+1. Clone the repository
 ```bash
 git clone https://github.com/karthik-karalgikar/visualize.git
 cd visualize
