@@ -3,6 +3,24 @@ import numpy as np
 import torch
 
 def safe_json(value, max_elements=30):
+    if hasattr(value, '__class__') and 'torch.nn' in str(type(value)):
+        return {
+            "type" : "nn_model",
+            "model_repr" : repr(value),
+            "model_str" : str(value)
+        }
+    # Handle datetime objects
+    if hasattr(value, 'isoformat'):  # datetime, date, time
+        return str(value)
+    
+    # Handle Decimal
+    if value.__class__.__name__ == 'Decimal':
+        return str(value)
+    
+    # Handle Fraction
+    if value.__class__.__name__ == 'Fraction':
+        return str(value)
+    
     # Handle numpy arrays
     if isinstance(value, np.ndarray):
         size = value.size
@@ -34,17 +52,20 @@ def safe_json(value, max_elements=30):
         numel = t.numel()
         
         if numel <= max_elements:
+            tensor_value = t.cpu().detach().tolist()
             return {
-                "__torch_tensor__": True,
+                "type": "torchtensor",
+                # "__torch_tensor__": True,
                 "shape": list(t.size()),
                 "dtype": str(t.dtype),
-                "values": t.cpu().detach().tolist()
+                "values": tensor_value
             }
         else:
             try:
                 flat = t.cpu().detach().view(-1)
                 return {
-                    "__torch_tensor__": True,
+                    "type": "torchtensor",
+                    # "__torch_tensor__": True,
                     "shape": list(t.size()),
                     "dtype": str(t.dtype),
                     "summary": {

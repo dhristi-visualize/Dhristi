@@ -1,6 +1,8 @@
 import sys
 import copy
 import math
+import types
+
 
 # #shared state object
 # state = {
@@ -10,6 +12,7 @@ import math
 
 execution_log = []
 last_line = None
+current_lineno = None
 
 def tracer(frame, event, arg):
     global last_line 
@@ -27,10 +30,14 @@ def tracer(frame, event, arg):
         for k, v in variables.items():
             if k.startswith("__"):
                 continue
-            if callable(v): # -> to check if an object can be called (checking if v is callable, if it is, then continue)
+            if callable(v) and not hasattr(v, '__dict__'): # -> to check if an object can be called (checking if v is callable, if it is, then continue)
                 continue
-            if isinstance(v, type(math)): # -> checks whether an object or variable is an instance of a specified type or class. (checks whether v is of type math)
+            if isinstance(v, types.ModuleType):
                 continue
+            if isinstance(v, type): # -> checks whether an object or variable is an instance of a specified type or class. (checks whether v is of type math)
+                continue
+            # if hasattr(v, '__module__') and v.__module__ == '__future__':
+            #     continue
             cleaned[k] = v
         return cleaned
 
@@ -55,6 +62,7 @@ def tracer(frame, event, arg):
         return tracer
     
     if event == "line":
+        global current_lineno
         # providing "after" state for the PREVIOUS line
         if last_line is not None and execution_log:
             after = snap_locals()
@@ -65,6 +73,8 @@ def tracer(frame, event, arg):
 
         # log the CURRENT line (with "before" state)
         last_line = frame.f_lineno
+        current_lineno = last_line
+        
         before = snap_locals()
         execution_log.append({
             "event": "line",

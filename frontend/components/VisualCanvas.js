@@ -1,14 +1,79 @@
 window.Components = window.Components || {};
 
-window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, changedVars, detectType }) => {
-  const { ArrayVisualization, MatrixVisualization, DictVisualization } = window.Components;
+window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, changedVars, detectType, nnModels }) => {
+  const { ArrayVisualization, MatrixVisualization, DictVisualization, NeuralNetworkVisualization } = window.Components;
   const { renderFormula } = window.Utils;
 
   const renderValue = (value, name) => {
     const type = detectType(value);
+    // Check if this is a neural network model
+    if (value && value.type === 'nn_model') {
+      // Find the corresponding model structure
+      const modelInfo = nnModels?.find(m => m.model_name === name);
+      if (modelInfo) {
+        return <NeuralNetworkVisualization model={modelInfo} />;
+      }
+      // Fallback if no structure found
+      return (
+        <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
+          <div className="font-semibold mb-1">PyTorch Model</div>
+          <pre className="text-xs overflow-x-auto">{value.model_str}</pre>
+        </div>
+      );
+    }
     switch (type) {
       case 'array': return <ArrayVisualization arr={value} name={name} />;
       case 'ndarray': return <MatrixVisualization matrix={value} name={name} />;
+      case 'tensor_scalar':
+        // Scalar tensor - show as number
+        const scalarValue = Array.isArray(value.values) ? value.values[0] : value.values;
+        return (
+          <div>
+            <span className="font-mono text-orange-400 text-xl font-bold">{scalarValue}</span>
+            <span className="text-xs text-gray-500 ml-2">torch.{value.dtype}</span>
+          </div>
+        );
+      case 'tensor_1d':
+        // 1D tensor - show as array
+        return (
+          <div>
+            <div className="text-xs text-gray-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <ArrayVisualization arr={value.values} name={name} />
+          </div>
+        );
+      case 'tensor_2d':
+        // 2D tensor - show as matrix
+        return (
+          <div>
+            <div className="text-xs text-gray-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <MatrixVisualization matrix={{ type: 'ndarray', values: value.values }} name={name} />
+          </div>
+        );
+      case 'tensor_nd':
+        // Higher dimensional - show info
+        return (
+          <div className="space-y-2">
+            <div className="text-xs text-yellow-400 mb-2">
+              torch tensor: shape {value.shape.join('x')} | {value.dtype}
+            </div>
+            <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
+              {value.summary ? (
+                <>
+                  <div>Size: {value.summary.size}</div>
+                  <div>Min: {value.summary.min?.toFixed(4)}</div>
+                  <div>Max: {value.summary.max?.toFixed(4)}</div>
+                  <div>Mean: {value.summary.mean?.toFixed(4)}</div>
+                </>
+              ) : (
+                <div>High-dimensional tensor</div>
+              )}
+            </div>
+          </div>
+        );
       case 'matrix': return <MatrixVisualization matrix={value} name={name} />;
       case 'dict': return <DictVisualization dict={value} />;
       case 'string': return <span className="font-mono text-green-400 text-lg">"{value}"</span>;
@@ -28,6 +93,18 @@ window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, chang
         </div>
       ) : (
         <div className="space-y-4 max-h-[500px] overflow-y-auto p-4 bg-slate-900/50 rounded-lg">
+          {/* Console Output Section */}
+            {currentStepData?.stdout?.length > 0 && (
+              <div className="bg-slate-950 border-2 border-green-500 rounded-xl p-4 mb-4">
+                <div className="text-xs text-green-400 font-semibold mb-2">
+                  Console Output
+                </div>
+                <pre className="text-sm font-mono text-green-300 whitespace-pre-wrap">
+                  {currentStepData.stdout.join("\n")}
+                </pre>
+              </div>
+            )}
+
           {currentStepData?.formula && (
             <div className="bg-indigo-900/30 border-2 border-indigo-500 rounded-xl p-4 mb-4">
               <div className="text-xs text-indigo-400 mb-2 font-semibold">📐 Formula at Line {currentStepData.lineno}</div>
