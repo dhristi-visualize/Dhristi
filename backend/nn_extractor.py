@@ -48,129 +48,238 @@ def extract_layer(call_node: ast.Call):
     
     return None
 
-def analyze_neuron_expression(expr):
-    '''
-    Docstring for analyze_neuron_expression
-    
-    detects expressions of the form : x[0]*w[0] + x[1]*w[1] + ... + bias
-    '''
-    if not isinstance(expr, ast.BinOp):
-        return None
-    
-    terms = []
-    bias = None
-
-    def walk(node):
-        nonlocal bias
-        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
-            walk(node.left)
-            walk(node.right)
-        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
-            # expect x[i] * w[i]
-            if (
-                isinstance(node.left, ast.Subscript)
-                and isinstance(node.right, ast.Subscript)
-            ):
-                terms.append((node.left, node.right))
-        elif isinstance(node, ast.Name) or isinstance(node, ast.Constant):
-            bias = ast.unparse(node)
-
-    walk(expr)
-
-    if len(terms) < 2:
-        return None
-    
-    input_name = ast.unparse(terms[0][0].value)
-    weight_name = ast.unparse(terms[0][1].value)
-
-    return {
-        "input" : input_name,
-        "weight" : weight_name,
-        "bias" : bias,
-        "input_count" : len(terms)
-    }
-
-# def extract_manual_dense(code):
-#     tree = ast.parse(code)
-#     models = []
-
-#     for node in ast.walk(tree):
-#         if isinstance(node, ast.Assign) and isinstance(node.value, ast.List):
-#             outputs = node.value.elts
-#             neurons = []
-
-#             for elt in outputs:
-#                 neuron = analyze_neuron_expression(elt)
-#                 if neuron:
-#                     neurons.append(neuron)
-
-#             if len(neurons) >= 2:
-#                 models.append({
-#                     "model_name" : node.targets[0].id,
-#                     "type" : "ManualDense",
-#                     "neurons" : neurons
-#                 })
-
-#     return models
-
-def extract_manual_dense(code):
+def extract_manual_dense_layers(code: str):
     tree = ast.parse(code)
-    models = []
+
+    tree = ast.parse(code)
+    dense_assignments = extract_dense_assignments(tree)
+
+    if len(dense_assignments) >= 2:
+        return [{
+            "model_name": "ManualDense",
+            "type": "Dense",
+            "layers": chain_dense_layers(dense_assignments)
+        }]
+
+    unrolled = detect_unrolled_dense(tree)
+    if unrolled:
+        return [{
+            "model_name": "ManualDense",
+            "type": "Dense",
+            "layers": [{
+                "layer": "Linear",
+                "in": unrolled["inputs"],
+                "out": unrolled["neurons"]
+            }]
+        }]
+
+    input_size = None
+    neuron_count = None
+    has_bias = False
+    has_dot = False
+    has_loop = False
+
+    for node in ast.walk(tree):
+
+        # Detect input vector
+        if isinstance(node, ast.Assign):
+            if isinstance(node.value, ast.List):
+                name = node.targets[0].id if isinstance(node.targets[0], ast.Name) else ""
+
+                # Heuristic: 1D list used later in dot or loop
+                if input_size is None and len(node.value.elts) >= 2:
+                    input_size = len(node.value.elts)
+
+                # Detect 2D weight matrix
+                if node.value.elts and isinstance(node.value.elts[0], ast.List):
+                    neuron_count = len(node.value.elts)
+
+                # Detect bias vector
+                if name.lower().startswith("bias"):
+                    has_bias = True
+
+        # Detect np.dot(weights, inputs)
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and node.func.attr == "dot":
+                has_dot = True
+
+        # Detect zip(weights, biases) loop
+        if isinstance(node, ast.For):
+            if isinstance(node.iter, ast.Call):
+                if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "zip":
+                    has_loop = True
+
+    confidence = 0
+    confidence += 3 if has_dot else 0
+    confidence += 2 if has_loop else 0
+    confidence += 2 if neuron_count else 0
+    confidence += 1 if has_bias else 0
+
+    if confidence < 4 or not input_size or not neuron_count:
+        return []
+
+    return [{
+        "model_name": "ManualDense",
+        "type": "Dense",
+        "layers": [{
+            "layer": "Linear",
+            "in": input_size,
+            "out": neuron_count
+        }]
+    }]
+
+def extract_weight_stack_dense(code: str):
+    tree = ast.parse(code)
+    layers = []
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
-            # Case 1: Multiple neurons (list of expressions)
             if isinstance(node.value, ast.List):
-                outputs = node.value.elts
-                neurons = []
+                # weights = [...]
+                if isinstance(node.targets[0], ast.Name) and node.targets[0].id == "weights":
+                    top = node.value.elts  # layers
 
-                for elt in outputs:
-                    neuron = analyze_neuron_expression(elt)
-                    if neuron:
-                        neurons.append(neuron)
+                    prev_out = None
 
-                if len(neurons) >= 2:  # At least 2 neurons
-                    models.append({
-                        "model_name": node.targets[0].id,
-                        "type": "ManualDense",
-                        "neurons": neurons
-                    })
-            
-            # Case 2: Single neuron (direct expression)
-            else:
-                neuron = analyze_neuron_expression(node.value)
-                if neuron:
-                    # Check if variable names suggest neural network
-                    var_name = node.targets[0].id if node.targets else ""
-                    if is_likely_neural_network(var_name, neuron):
-                        models.append({
-                            "model_name": var_name,
-                            "type": "SingleNeuron",
-                            "neurons": [neuron]
+                    for layer in top:
+                        if not isinstance(layer, ast.List):
+                            continue
+
+                        neurons = len(layer.elts)
+                        if neurons == 0:
+                            continue
+
+                        first = layer.elts[0]
+                        if not isinstance(first, ast.List):
+                            continue
+
+                        in_features = len(first.elts)
+
+                        layers.append({
+                            "layer": "Linear",
+                            "in": in_features if prev_out is None else prev_out,
+                            "out": neurons
                         })
 
-    return models
+                        prev_out = neurons
 
-def is_likely_neural_network(var_name, neuron):
-    """Heuristic to guess if this is a neural network"""
-    nn_keywords = ["output", "neuron", "activation", "hidden", "layer", "prediction", "y_pred", "forward"]
-    
-    # Check variable name
-    var_lower = var_name.lower()
-    if any(keyword in var_lower for keyword in nn_keywords):
-        return True
-    
-    # Check if weights/bias naming suggests NN
-    weight_name = neuron.get("weight", "").lower()
-    bias_name = str(neuron.get("bias", "")).lower()
-    
-    if "weight" in weight_name or "w" == weight_name:
-        if "bias" in bias_name or "b" == bias_name:
-            return True
-    
-    # If it has 3+ inputs, more likely to be NN
-    if neuron.get("input_count", 0) >= 3:
-        return True
-    
-    return False
+    if not layers:
+        return []
+
+    return [{
+        "model_name": "ManualDense",
+        "type": "Dense",
+        "layers": layers
+    }]
+
+
+def detect_unrolled_dense(tree):
+    """
+    Detects:
+    inputs[0]*w[0] + inputs[1]*w[1] + ... + bias
+    repeated N times → Dense layer
+    """
+    neuron_count = 0
+    input_indices = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            terms = flatten_add(node)
+
+            mul_terms = [
+                t for t in terms
+                if isinstance(t, ast.BinOp) and isinstance(t.op, ast.Mult)
+            ]
+
+            if len(mul_terms) >= 2:
+                for m in mul_terms:
+                    if isinstance(m.left, ast.Subscript):
+                        input_indices.add(ast.unparse(m.left))
+                neuron_count += 1
+
+    if neuron_count >= 1 and len(input_indices) >= 2:
+        return {
+            "inputs": len(input_indices),
+            "neurons": neuron_count
+        }
+
+    return None
+
+
+def flatten_add(node):
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return flatten_add(node.left) + flatten_add(node.right)
+    return [node]
+
+def extract_dense_assignments(tree):
+    """
+    Finds:
+    layerX_out = <dense expression>
+    """
+    layers = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.List):
+            name = node.targets[0].id if isinstance(node.targets[0], ast.Name) else None
+            dense = detect_unrolled_dense_expr(node.value)
+
+            if name and dense:
+                layers.append({
+                    "var": name,
+                    "out": dense["neurons"]
+                })
+    return layers
+
+def chain_dense_layers(dense_layers):
+    chained = []
+    prev_out = None
+
+    for layer in dense_layers:
+        in_features = prev_out if prev_out is not None else layer.get("in", None)
+
+        chained.append({
+            "layer": "Linear",
+            "in": in_features,
+            "out": layer["out"]
+        })
+
+        prev_out = layer["out"]
+
+    return chained
+
+def detect_unrolled_dense_expr(expr):
+    """
+    Detects a SINGLE dense layer from:
+    [
+      a*b + c*d + bias,
+      ...
+    ]
+    """
+    if not isinstance(expr, ast.List):
+        return None
+
+    neuron_count = len(expr.elts)
+    input_terms = set()
+
+    for elt in expr.elts:
+        if not isinstance(elt, ast.BinOp):
+            return None
+
+        terms = flatten_add(elt)
+        muls = [t for t in terms if isinstance(t, ast.BinOp) and isinstance(t.op, ast.Mult)]
+
+        if len(muls) < 2:
+            return None
+
+        for m in muls:
+            if isinstance(m.left, ast.Subscript):
+                input_terms.add(ast.unparse(m.left.value))
+
+    if neuron_count >= 1 and len(input_terms) >= 1:
+        return {
+            "inputs": None,     # resolved via chaining
+            "neurons": neuron_count
+        }
+
+    return None
 

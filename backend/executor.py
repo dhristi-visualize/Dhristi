@@ -9,7 +9,7 @@ import types
 import tracer
 from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
-from nn_extractor import extract_sequential_models, extract_manual_dense
+from nn_extractor import extract_sequential_models, extract_manual_dense_layers, extract_weight_stack_dense
 from imports import STDLIB_MODULES
 
 printed_output = []
@@ -35,8 +35,26 @@ def run_code(code):
     tracer.current_lineno = None
     printed_output.clear()
 
+
     formula_map = find_candidate_expressions(code)
-    nn_models = (extract_sequential_models(code) + extract_manual_dense(code))
+    nn_models = []
+
+    # Highest confidence: explicit framework models
+    seq = extract_sequential_models(code)
+    if seq:
+        nn_models = seq
+
+    else:
+        # Static weight-stack inference (MULTI-LAYER)
+        stack = extract_weight_stack_dense(code)
+        if stack:
+            nn_models = stack
+
+        else:
+            # Heuristic fallback (SINGLE-LAYER)
+            manual = extract_manual_dense_layers(code)
+            if manual:
+                nn_models = manual
 
     safe_builtins = dict(__builtins__)
     safe_builtins["print"] = traced_print
@@ -147,6 +165,33 @@ def run_code(code):
                 ss["formula"] = None
             
             safe_steps.append(ss)
+        
+        for m in nn_models:
+            try:
+                X = sandbox_globals.get(m["input"])
+                W = sandbox_globals.get(m["weights"])
+                b = sandbox_globals.get(m.get("biases"))
+
+                # ---- NUMPY / MATRIX ----
+                if isinstance(W, list) and isinstance(W[0], list):
+                    m["type"] = "manual_dense"
+                    m["input_size"] = len(X)
+                    m["output_size"] = len(W)
+                    m["weights"] = W
+                    m["biases"] = b if isinstance(b, list) else [0]*len(W)
+
+                # ---- SINGLE NEURON ----
+                elif isinstance(W, list):
+                    m["type"] = "manual_dense"
+                    m["input_size"] = len(X)
+                    m["output_size"] = 1
+                    m["weights"] = [W]
+                    m["biases"] = [b] if b is not None else [0]
+
+            except Exception:
+                continue
+
+
 
         return {
             "success": True, 
