@@ -9,7 +9,7 @@ import types
 import tracer
 from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
-from nn_extractor import extract_sequential_models
+from nn_extractor import extract_sequential_models, extract_manual_dense
 from imports import STDLIB_MODULES
 
 printed_output = []
@@ -36,7 +36,7 @@ def run_code(code):
     printed_output.clear()
 
     formula_map = find_candidate_expressions(code)
-    nn_models = extract_sequential_models(code)
+    nn_models = (extract_sequential_models(code) + extract_manual_dense(code))
 
     safe_builtins = dict(__builtins__)
     safe_builtins["print"] = traced_print

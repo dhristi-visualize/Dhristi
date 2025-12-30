@@ -7,20 +7,20 @@ window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, chang
   const renderValue = (value, name) => {
     const type = detectType(value);
     // Check if this is a neural network model
-    if (value && value.type === 'nn_model') {
-      // Find the corresponding model structure
-      const modelInfo = nnModels?.find(m => m.model_name === name);
-      if (modelInfo) {
-        return <NeuralNetworkVisualization model={modelInfo} />;
-      }
-      // Fallback if no structure found
-      return (
-        <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
-          <div className="font-semibold mb-1">PyTorch Model</div>
-          <pre className="text-xs overflow-x-auto">{value.model_str}</pre>
-        </div>
-      );
-    }
+    // if (value && value.type === 'nn_model') {
+    //   // Find the corresponding model structure
+    //   const modelInfo = nnModels?.find(m => m.model_name === name);
+    //   if (modelInfo) {
+    //     return <NeuralNetworkVisualization model={modelInfo} />;
+    //   }
+    //   // Fallback if no structure found
+    //   return (
+    //     <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
+    //       <div className="font-semibold mb-1">PyTorch Model</div>
+    //       <pre className="text-xs overflow-x-auto">{value.model_str}</pre>
+    //     </div>
+    //   );
+    // }
     switch (type) {
       case 'array': return <ArrayVisualization arr={value} name={name} />;
       case 'ndarray': return <MatrixVisualization matrix={value} name={name} />;
@@ -93,6 +93,24 @@ window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, chang
         </div>
       ) : (
         <div className="space-y-4 max-h-[500px] overflow-y-auto p-4 bg-slate-900/50 rounded-lg">
+          {/* Neural Network Section */}
+          {nnModels && nnModels.length > 0 && (
+            <div className="space-y-6 mb-6">
+              <div className="text-sm font-bold text-cyan-400">
+                Detected Neural Networks
+              </div>
+
+              {nnModels.map((model, idx) => (
+                <div
+                  key={idx}
+                  className="border-2 border-cyan-500 rounded-xl p-4 bg-slate-800/70"
+                >
+                  <NeuralNetworkVisualization model={model} />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Console Output Section */}
             {currentStepData?.stdout?.length > 0 && (
               <div className="bg-slate-950 border-2 border-green-500 rounded-xl p-4 mb-4">

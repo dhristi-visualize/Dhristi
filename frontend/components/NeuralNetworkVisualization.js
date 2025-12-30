@@ -1,6 +1,48 @@
 window.Components = window.Components || {};
 
 window.Components.NeuralNetworkVisualization = ({ model }) => {
+
+  if (model.type === "ManualDense") {
+  return (
+    <div className="space-y-4">
+      <div className="text-xs text-cyan-400 font-semibold">
+        Manual Neural Network: {model.model_name}
+      </div>
+
+      <div className="flex flex-col items-center gap-4 bg-slate-900 p-6 rounded-lg">
+        {model.neurons.map((n, idx) => (
+          <div key={idx} className="relative">
+            <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white px-6 py-4 rounded-lg shadow-lg border-2 border-orange-400 min-w-[260px]">
+              <div className="text-center font-bold text-lg">
+                Neuron {idx + 1}
+              </div>
+              <div className="text-xs mt-1 opacity-90">
+                inputs: {n.inputs_count}
+              </div>
+              <div className="text-xs mt-1">
+                weights: {n.weights}
+              </div>
+              <div className="text-xs">
+                bias: {n.bias}
+              </div>
+            </div>
+
+            <div className="absolute -top-2 -left-2 bg-purple-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+              {idx + 1}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-slate-800 p-3 rounded text-xs text-gray-300">
+        <div className="font-semibold mb-1">Detected Structure:</div>
+        <div>{model.neurons.length} neurons</div>
+        <div>{model.neurons[0]?.inputs_count} inputs → {model.neurons.length} outputs</div>
+      </div>
+    </div>
+  );
+}
+
   const layers = model.layers || [];
   
   return (
