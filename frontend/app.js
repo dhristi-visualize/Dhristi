@@ -3,6 +3,7 @@ const { ArrayVisualization } = window.Components;
 const { MatrixVisualization } = window.Components;
 const { DictVisualization } = window.Components;
 const { NeuralNetworkVisualization } = window.Components;
+const { RecursionTree } = window.Components;
 const { CodeEditor } = window.Components;
 const { VisualCanvas } = window.Components;
 const { Controls } = window.Components;
@@ -19,7 +20,8 @@ const PythonVisualizer = () => {
   const [error, setError] = useState(null);
   const [autoPlay, setAutoPlay] = useState(false);
   const [nnModels, setNnModels] = useState([]);
-  // const [output, setOutput] = useState("");
+  const [callTree, setCallTree] = useState([]);
+  const [recursiveFuncs, setRecursiveFuncs] = useState([]);
 
   const currentStepData = executionLog[currentStep];
   const locals = (currentStepData && (currentStepData.after || currentStepData.before)) || {};
@@ -62,8 +64,9 @@ const PythonVisualizer = () => {
       const data = await response.json();
       if (data.success) {
         setExecutionLog(data.steps);
-        // setOutput(data.output || "");
         setNnModels(data.nn_models || []);
+        setCallTree(data.call_tree || []);
+        setRecursiveFuncs(data.recursive_funcs || []);
       } else {
         setError(data.error);
       }
@@ -95,12 +98,14 @@ const PythonVisualizer = () => {
           
           <VisualCanvas
             executionLog={executionLog}
+            currentStep={currentStep}
             currentStepData={currentStepData}
             locals={locals}
             changedVars={changedVars}
             detectType={detectType}
             nnModels={nnModels}
-            // output={output}
+            callTree={callTree}
+            recursiveFuncs={recursiveFuncs}
           />
         </div>
 

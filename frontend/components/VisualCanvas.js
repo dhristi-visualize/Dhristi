@@ -1,26 +1,11 @@
 window.Components = window.Components || {};
 
-window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, changedVars, detectType, nnModels }) => {
-  const { ArrayVisualization, MatrixVisualization, DictVisualization, NeuralNetworkVisualization } = window.Components;
+window.Components.VisualCanvas = ({ executionLog, currentStep, currentStepData, locals, changedVars, detectType, nnModels, callTree, recursiveFuncs }) => {
+  const { ArrayVisualization, MatrixVisualization, DictVisualization, NeuralNetworkVisualization, RecursionTree } = window.Components;
   const { renderFormula } = window.Utils;
 
   const renderValue = (value, name) => {
     const type = detectType(value);
-    // Check if this is a neural network model
-    // if (value && value.type === 'nn_model') {
-    //   // Find the corresponding model structure
-    //   const modelInfo = nnModels?.find(m => m.model_name === name);
-    //   if (modelInfo) {
-    //     return <NeuralNetworkVisualization model={modelInfo} />;
-    //   }
-    //   // Fallback if no structure found
-    //   return (
-    //     <div className="bg-slate-700 p-3 rounded text-sm text-gray-300">
-    //       <div className="font-semibold mb-1">PyTorch Model</div>
-    //       <pre className="text-xs overflow-x-auto">{value.model_str}</pre>
-    //     </div>
-    //   );
-    // }
     switch (type) {
       case 'array': return <ArrayVisualization arr={value} name={name} />;
       case 'ndarray': return <MatrixVisualization matrix={value} name={name} />;
@@ -110,6 +95,15 @@ window.Components.VisualCanvas = ({ executionLog, currentStepData, locals, chang
               ))}
             </div>
           )}
+
+          {/* NEW: Recursion Tree */}
+        {callTree && callTree.length > 1 && recursiveFuncs && recursiveFuncs.length > 0 && (
+          <RecursionTree 
+            callTree={callTree} 
+            currentStep={currentStep}
+            executionLog={executionLog}
+          />
+        )}
 
           {/* Console Output Section */}
             {currentStepData?.stdout?.length > 0 && (
