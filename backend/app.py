@@ -15,7 +15,5 @@ def execute():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok"})
+    return {"status": "OK", "message": "Backend running"}
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
