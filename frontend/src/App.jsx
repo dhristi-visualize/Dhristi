@@ -9,7 +9,9 @@ export default function App() {
      Core State
   -------------------------------- */
 
-  const [code, setCode] = useState(`import numpy as np\n\nlist1 = [1, 2, 3]\nx = np.array([[1.0, 2.0], [3.0, 4.0]])\npass`);
+  const [code, setCode] = useState(
+    `import numpy as np\n\nlist1 = [1, 2, 3]\nx = np.array([[1.0, 2.0], [3.0, 4.0]])\npass`
+  );
 
   const [executionLog, setExecutionLog] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -26,14 +28,9 @@ export default function App() {
 
   const currentStepData = executionLog[currentStep] || null;
 
-const locals = useMemo(() => {
-  return (
-    currentStepData?.after ||
-    currentStepData?.before ||
-    {}
-  );
-}, [currentStepData]);
-
+  const locals = useMemo(() => {
+    return currentStepData?.after || currentStepData?.before || {};
+  }, [currentStepData]);
 
   const changedVars = useMemo(() => {
     if (currentStep === 0 || !executionLog[currentStep - 1]) {
@@ -109,7 +106,7 @@ const locals = useMemo(() => {
     setAutoPlay(false);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/execute", {
+      const res = await fetch("https://dhristi-executor.onrender.com/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
@@ -141,54 +138,51 @@ const locals = useMemo(() => {
   -------------------------------- */
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-    <div className="max-w-[1800px] mx-auto">
-      
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Python Execution Visualizer
-        </h1>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+      <div className="max-w-[1800px] mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Python Execution Visualizer
+          </h1>
+        </div>
 
-      {/* TOP: Editor + Visual Canvas */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
-        <div className="xl:col-span-2">
-          <CodeEditor
-            code={code}
-            setCode={setCode}
-            runCode={runCode}
-            isRunning={isRunning}
-            error={error}
+        {/* TOP: Editor + Visual Canvas */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+          <div className="xl:col-span-2">
+            <CodeEditor
+              code={code}
+              setCode={setCode}
+              runCode={runCode}
+              isRunning={isRunning}
+              error={error}
+            />
+          </div>
+
+          <VisualCanvas
+            executionLog={executionLog}
+            currentStep={currentStep}
+            currentStepData={currentStepData}
+            locals={locals}
+            changedVars={changedVars}
+            nnModels={nnModels}
+            callTree={callTree}
+            recursiveFuncs={recursiveFuncs}
           />
         </div>
 
-        <VisualCanvas
-          executionLog={executionLog}
-          currentStep={currentStep}
-          currentStepData={currentStepData}
-          locals={locals}
-          changedVars={changedVars}
-          nnModels={nnModels}
-          callTree={callTree}
-          recursiveFuncs={recursiveFuncs}
-        />
+        {/* BOTTOM: Controls */}
+        {executionLog.length > 0 && (
+          <Controls
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            executionLog={executionLog}
+            autoPlay={autoPlay}
+            setAutoPlay={setAutoPlay}
+            currentStepData={currentStepData}
+            codeLines={codeLines}
+          />
+        )}
       </div>
-
-      {/* BOTTOM: Controls */}
-      {executionLog.length > 0 && (
-        <Controls
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-          executionLog={executionLog}
-          autoPlay={autoPlay}
-          setAutoPlay={setAutoPlay}
-          currentStepData={currentStepData}
-          codeLines={codeLines}
-        />
-      )}
-
     </div>
-  </div>
-);
-
+  );
 }
