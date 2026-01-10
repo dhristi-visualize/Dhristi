@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "node node_modules/vite/dist/node/cli.js build",
-    "dev": "node node_modules/vite/dist/node/cli.js",
+    "build": "vite build",
+    "dev": "vite",
     "lint": "eslint .",
     "preview": "vite preview"
   },
