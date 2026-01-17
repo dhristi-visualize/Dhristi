@@ -1,7 +1,4 @@
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Play } from "./icons";
 
 export default function CodeEditor({
@@ -30,7 +27,7 @@ export default function CodeEditor({
   }, [currentStepData]);
 
   return (
-    <div className="h-full rounded-md bg-neutral-800 p-4">
+    <div className="h-full rounded-md bg-neutral-800 p-4 flex flex-col">
       {/* HEADER */}
       <div className="mb-2">
         <div className="font-semibold text-gray-100">Code Editor</div>
@@ -38,9 +35,9 @@ export default function CodeEditor({
       </div>
 
       {/* CODE VIEW */}
-      <div className="h-[calc(100%-96px)] rounded-lg border border-neutral-800 bg-neutral-900">
+      <div className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 overflow-y-auto">
         {isExecutionMode ? (
-          <ScrollArea className="h-full px-2">
+          <div className="px-2">
             {codeLines.map((line, idx) => {
               const lineNo = idx + 1;
 
@@ -78,7 +75,7 @@ export default function CodeEditor({
                 </div>
               );
             })}
-          </ScrollArea>
+          </div>
         ) : (
           <textarea
             value={code}
@@ -92,27 +89,22 @@ export default function CodeEditor({
 
       {/* RUN BUTTON */}
       <div className="mt-2">
-        <Button
+        <button
           onClick={runCode}
           disabled={isRunning}
-          className="w-full gap-2 bg-neutral-800 hover:bg-neutral-700"
+          className="w-full flex items-center justify-center gap-2 rounded-md bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed py-2 text-white"
         >
           <Play />
           {isRunning ? "Executing..." : "Run & Visualize"}
-        </Button>
+        </button>
       </div>
 
       {/* ERROR */}
       {error && (
-        <Alert
-          variant="destructive"
-          className="mt-2 border border-red-500/60 bg-red-500/10"
-        >
-          <AlertTitle className="text-xs font-semibold">Error</AlertTitle>
-          <AlertDescription className="text-xs font-mono">
-            {error}
-          </AlertDescription>
-        </Alert>
+        <div className="mt-2 rounded-md border border-red-500/60 bg-red-500/10 p-3">
+          <div className="text-xs font-semibold text-red-400">Error</div>
+          <div className="text-xs font-mono text-red-300">{error}</div>
+        </div>
       )}
     </div>
   );
