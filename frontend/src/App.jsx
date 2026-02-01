@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Group, Panel, Separator } from 'react-resizable-panels';
 import CodeEditor from "./components/CodeEditor";
 import Controls from "./components/Controls";
 import VisualCanvas from "./components/VisualCanvas";
@@ -74,7 +75,7 @@ export default function App() {
     setAutoPlay(false);
 
     try {
-      const res = await fetch("https://dhristi-executor.onrender.com/execute", {
+      const res = await fetch("http://127.0.0.1:5000/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
@@ -102,72 +103,83 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen bg-neutral-900">
-      <div className="flex h-full w-full max-w-[1800px] mx-auto flex-col">
-        {/* HEADER */}
-        <div className="flex h-14 items-center justify-between border-b border-neutral-800 px-4">
-          <div className="flex items-center gap-3">
-            <img
-              src="/dhristilogo.png"
-              alt="Dhristi logo"
-              className="h-[84px] w-[84px] object-contain"
-            />
+    <div className="h-screen w-screen bg-neutral-900 flex flex-col overflow-hidden">
+      {/* HEADER */}
+      <div className="flex h-14 items-center justify-between border-b border-neutral-800 px-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <img
+            src="/dhristilogo.png"
+            alt="Dhristi logo"
+            className="h-[84px] w-[84px] object-contain"
+          />
+          <div className="flex h-[84px] items-center">
+            <span className="text-base font-semibold text-gray-100">
+              Visualise Code
+            </span>
+          </div>
+        </div>
+      </div>
 
-            <div className="flex h-[84px] items-center">
-              <span className="text-base font-semibold text-gray-100">
-                Visualise Code
-              </span>
+      {/* MAIN CONTENT - RESIZABLE AREA */}
+      <div className="flex-1 p-2 min-h-0">
+        {/* Changed 'PanelGroup' to 'Group' and 'direction' to 'orientation' */}
+        <Group orientation="horizontal">
+          
+          {/* CODE EDITOR PANEL */}
+          <Panel defaultSize={60} minSize={30}>
+            <div className="h-full rounded-lg border border-neutral-800 bg-neutral-800 overflow-hidden">
+              <CodeEditor
+                code={code}
+                setCode={setCode}
+                runCode={runCode}
+                isRunning={isRunning}
+                error={error}
+                executionLog={executionLog}
+                currentStep={currentStep}
+                currentStepData={currentStepData}
+              />
             </div>
-          </div>
+          </Panel>
+
+          {/* RESIZE HANDLE - Changed 'PanelResizeHandle' to 'Separator' */}
+          <Separator className="w-2 transition-all duration-200 hover:bg-blue-600/30 flex items-center justify-center cursor-col-resize">
+            <div className="w-[1px] h-full bg-neutral-700" />
+          </Separator>
+
+          {/* VISUAL CANVAS PANEL */}
+          <Panel defaultSize={40} minSize={20}>
+            <div className="h-full rounded-lg border border-neutral-800 bg-neutral-800 overflow-auto">
+              <VisualCanvas
+                executionLog={executionLog}
+                currentStep={currentStep}
+                currentStepData={currentStepData}
+                locals={locals}
+                changedVars={changedVars}
+                nnModels={nnModels}
+                callTree={visibleCallTree}
+                recursiveFuncs={recursiveFuncs}
+              />
+            </div>
+          </Panel>
+
+        </Group>
+      </div>
+
+      {/* CONTROLS / TIMELINE */}
+      <div className="shrink-0">
+        <div className="h-px bg-neutral-700" />
+        <div className="h-16 px-4">
+          <Controls
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            executionLog={executionLog}
+            setExecutionLog={setExecutionLog}
+            autoPlay={autoPlay}
+            setAutoPlay={setAutoPlay}
+            currentStepData={currentStepData}
+            codeLines={codeLines}
+          />
         </div>
-
-        {/* MAIN CONTENT */}
-        <div className="flex flex-1 gap-2 p-2 min-h-0">
-          {/* CODE EDITOR */}
-          <div className="flex-[7] rounded-lg border border-neutral-800 bg-neutral-800 overflow-hidden">
-            <CodeEditor
-              code={code}
-              setCode={setCode}
-              runCode={runCode}
-              isRunning={isRunning}
-              error={error}
-              executionLog={executionLog}
-              currentStep={currentStep}
-              currentStepData={currentStepData}
-            />
-          </div>
-
-          {/* VISUAL CANVAS */}
-          <div className="flex-[5] rounded-lg border border-neutral-800 bg-neutral-800 overflow-hidden">
-            <VisualCanvas
-              executionLog={executionLog}
-              currentStep={currentStep}
-              currentStepData={currentStepData}
-              locals={locals}
-              changedVars={changedVars}
-              nnModels={nnModels}
-              callTree={visibleCallTree}
-              recursiveFuncs={recursiveFuncs}
-            />
-          </div>
-        </div>
-
-        {/* CONTROLS / TIMELINE */}
-        <>
-          <div className="h-px bg-neutral-700" />
-          <div className="h-16 px-4">
-            <Controls
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-              executionLog={executionLog}
-              setExecutionLog={setExecutionLog}
-              autoPlay={autoPlay}
-              setAutoPlay={setAutoPlay}
-              currentStepData={currentStepData}
-              codeLines={codeLines}
-            />
-          </div>
-        </>
       </div>
     </div>
   );

@@ -140,7 +140,7 @@ export default function VisualCanvas({
           </div>
         </div>
       ) : (
-        <ScrollArea className="h-[500px]">
+        <ScrollArea className="h-full w-full">
           <div className="flex flex-col gap-4 p-2">
             {/* Neural Networks */}
             {nnModels && nnModels.length > 0 && (
@@ -165,11 +165,13 @@ export default function VisualCanvas({
               callTree.length > 1 &&
               recursiveFuncs &&
               recursiveFuncs.length > 0 && (
+                <div className="overflow-visible p-4">
                 <RecursionTree
                   callTree={callTree}
                   currentStep={currentStep}
                   executionLog={executionLog}
                 />
+                </div>
               )}
               {/* Recursion Tree
               {visibleCallTree.length > 1 &&

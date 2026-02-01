@@ -1,0 +1,1322 @@
+{
+    "call_tree": [
+        {
+            "args": {},
+            "call_id": 0,
+            "func": "<module>",
+            "lineno": 0,
+            "parent_id": null,
+            "return_value": null
+        }
+    ],
+    "nn_models": [],
+    "recursive_funcs": [],
+    "steps": [
+        {
+            "after": {},
+            "before": {},
+            "code": null,
+            "event": "call",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 0,
+            "stdout": []
+        },
+        {
+            "after": {},
+            "before": {},
+            "code": "numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 2,
+            "stdout": []
+        },
+        {
+            "after": {
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "print(\"Checking numbers for even or odd status:\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 4,
+            "stdout": [
+                "Checking numbers for even or odd status:"
+            ]
+        },
+        {
+            "after": {
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is odd\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 13,
+            "stdout": [
+                "1 is odd"
+            ]
+        },
+        {
+            "after": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 1,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is even\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 10,
+            "stdout": [
+                "2 is even"
+            ]
+        },
+        {
+            "after": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 2,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is odd\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 13,
+            "stdout": [
+                "3 is odd"
+            ]
+        },
+        {
+            "after": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 3,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is even\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 10,
+            "stdout": [
+                "4 is even"
+            ]
+        },
+        {
+            "after": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 4,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is odd\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 13,
+            "stdout": [
+                "5 is odd"
+            ]
+        },
+        {
+            "after": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 5,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is even\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 10,
+            "stdout": [
+                "6 is even"
+            ]
+        },
+        {
+            "after": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 6,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is odd\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 13,
+            "stdout": [
+                "7 is odd"
+            ]
+        },
+        {
+            "after": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 7,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is even\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 10,
+            "stdout": [
+                "8 is even"
+            ]
+        },
+        {
+            "after": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 8,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is odd\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 13,
+            "stdout": [
+                "9 is odd"
+            ]
+        },
+        {
+            "after": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 9,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "    if number % 2 == 0:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 9,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "        print(str(number) + \" is even\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 10,
+            "stdout": [
+                "10 is even"
+            ]
+        },
+        {
+            "after": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "for number in numbers:",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 7,
+            "stdout": []
+        },
+        {
+            "after": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "before": {
+                "number": 10,
+                "numbers": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ]
+            },
+            "code": "print(\"Loop finished.\")",
+            "event": "line",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 15,
+            "stdout": [
+                "Loop finished."
+            ]
+        },
+        {
+            "after": null,
+            "before": null,
+            "code": "print(\"Loop finished.\")",
+            "event": "return",
+            "formula": null,
+            "func": "<module>",
+            "lineno": 15,
+            "return_value": null,
+            "stdout": []
+        }
+    ],
+    "success": true
+}
