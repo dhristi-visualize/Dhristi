@@ -17,7 +17,7 @@ export default function App() {
   const [nnModels, setNnModels] = useState([]);
   const [callTree, setCallTree] = useState([]);
   const [recursiveFuncs, setRecursiveFuncs] = useState([]);
-  const [language, setLanguage] = useState("python");
+  const [language] = useState("python");
 
 
   const currentStepData = executionLog[currentStep] || null;
@@ -140,6 +140,7 @@ export default function App() {
                 executionLog={executionLog}
                 currentStep={currentStep}
                 currentStepData={currentStepData}
+                language={language}
               />
             </div>
           </Panel>
@@ -181,6 +182,8 @@ export default function App() {
             setAutoPlay={setAutoPlay}
             currentStepData={currentStepData}
             codeLines={codeLines}
+            playSpeed={playSpeed}
+            setPlaySpeed={setPlaySpeed}
           />
         </div>
       </div>

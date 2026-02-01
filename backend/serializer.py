@@ -50,7 +50,7 @@ def safe_json(value, max_elements=30, seen=None):
             steps += 1
 
         if current is not None:
-            elements.append("⟲ cycle")
+            elements.append("cycle")
 
         return {
             "type": "linked_list",

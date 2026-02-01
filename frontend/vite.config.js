@@ -1,19 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'yaml': 'yaml/dist/index.js'
-    }
+      "@": path.resolve(__dirname, "src"),
+    },
   },
-  optimizeDeps: {
-    include: ['@monaco-editor/react', 'monaco-editor']
-  },
-  build: {
-    commonjsOptions: {
-      include: [/@monaco-editor/, /node_modules/]
-    }
-  }
-})
+}
+);
