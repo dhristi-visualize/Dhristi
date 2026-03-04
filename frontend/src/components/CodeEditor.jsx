@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { Play } from "./icons";
 import Editor from "@monaco-editor/react";
 
-
 export default function CodeEditor({
   code,
   setCode,
@@ -13,6 +12,7 @@ export default function CodeEditor({
   currentStep,
   currentStepData,
   language,
+  setLanguage,
 }) {
   const codeLines = code.split("\n");
   const lineRefs = useRef({});
@@ -20,17 +20,16 @@ export default function CodeEditor({
   const isExecutionMode = executionLog.length > 0;
 
   // Auto-scroll to current line
- useEffect(() => {
-   if (!isExecutionMode) return;
+  useEffect(() => {
+    if (!isExecutionMode) return;
 
-   if (currentStepData?.lineno && lineRefs.current[currentStepData.lineno]) {
-     lineRefs.current[currentStepData.lineno].scrollIntoView({
-       block: "center",
-       behavior: "smooth",
-     });
-   }
- }, [currentStepData, isExecutionMode]);
-
+    if (currentStepData?.lineno && lineRefs.current[currentStepData.lineno]) {
+      lineRefs.current[currentStepData.lineno].scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [currentStepData, isExecutionMode]);
 
   return (
     <div className="h-full rounded-md bg-neutral-800 p-4 flex flex-col">
@@ -74,7 +73,6 @@ export default function CodeEditor({
         </div>
       </div>
 
-
       {/* CODE VIEW */}
       <div className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 overflow-y-auto">
         {isExecutionMode ? (
@@ -88,7 +86,7 @@ export default function CodeEditor({
 
               const isExecuted = executionLog.some(
                 (step, stepIdx) =>
-                  step.lineno === lineNo && stepIdx <= currentStep
+                  step.lineno === lineNo && stepIdx <= currentStep,
               );
 
               return (
@@ -100,13 +98,13 @@ export default function CodeEditor({
                     backgroundColor: isCurrent
                       ? "#facc15"
                       : isExecuted
-                      ? "rgba(34,197,94,0.15)"
-                      : "transparent",
+                        ? "rgba(34,197,94,0.15)"
+                        : "transparent",
                     color: isCurrent
                       ? "#000"
                       : isExecuted
-                      ? "#86efac"
-                      : "#6b7280",
+                        ? "#86efac"
+                        : "#6b7280",
                   }}
                 >
                   <span className="inline-block w-8 text-right mr-3 select-none text-neutral-500">
@@ -118,20 +116,19 @@ export default function CodeEditor({
             })}
           </div>
         ) : (
-            <Editor
-              height="100%"
-              language={language}
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value ?? "")}
-              options={{
-                fontSize: 13,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-              }}
-            />
-
+          <Editor
+            height="100%"
+            language={language}
+            theme="vs-dark"
+            value={code}
+            onChange={(value) => setCode(value ?? "")}
+            options={{
+              fontSize: 13,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+            }}
+          />
         )}
       </div>
 

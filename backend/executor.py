@@ -157,7 +157,8 @@ def run_code(code):
                 if s.get(key) is None:
                     ss[key] = None
                 else:
-                    ss[key] = {name: safe_json(val) for name, val in s[key].items()}
+                    seen = set()
+                    ss[key] = {name: safe_json(val, seen=seen) for name, val in s[key].items()}
             
             # Process return value
             if "return_value" in s:

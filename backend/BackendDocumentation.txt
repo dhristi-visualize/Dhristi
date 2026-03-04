@@ -1,0 +1,108 @@
+1. Accepts user-written code
+2. Statically analyzes code(AST)
+3. Executes code in a sandbox with tracing 
+4. Returns a structures execution timeline for visualisation
+
+- line-y-line variable states
+- prints/Output
+- function call and recursion
+- formulas
+- Neural Network structures
+
+============================================================
+
+Request -> Response Flow = 
+
+1. Frontend(app.jsx)
+ | POST /execute
+ | body : {code: " .. "}
+
+2.Flask   (app.py)
+ | 
+ executor.py -> run_code()
+ | AST analysis, NN extraction, recursion
+ 
+3. JSON response 
+
+4. Frontend visualisation
+
+============================================================
+app.py -> API entry point
+
+Aapp.route('/execute', methods=[POST])
+def execute():
+    code = request.json.get('code', '')
+    return jsonify(run_code(code))
+
+-> Receives user code from frontend
+-> calls run_code(code)
+-> Returns structured JSON
+
+============================================================
+
+JSON is something like this -> 
+
+{
+    "success" : true,
+    "steps" : [
+        {
+            "event" : "line", 
+            "lineno" : 4,
+            "code" : "x = np.arrat([[1, 2], [3, 4]])",
+            "before" : {}
+            "after" : {
+                "x" : {
+                    "type" : "ndarray",
+                    "values" : [[1, 2], [3, 4]]
+                }
+            },
+            "stdout" : [],
+            "formula" : null
+        }
+    ],
+    "nn_models" : [...],
+    "call_tree" : [...],
+    "recursive_funcs" : [...]    
+}
+
+============================================================
+
+How are types recognised?
+-> meaning, how does frontend know what is a list, a matrix, a tensor, etc?
+
+-> Backend does not send types like "list" or "matrix" explicitly.
+It just sends JSON, and the frontend infers the type
+
+In backend serialiser.py decides what "shape" to send -> 
+
+1. Python list = [1, 2, 3]
+Backend sends [1, 2, 3]
+
+2. NumPy array = np.array([1, 2], [3, 4])
+Backend sends 
+{
+    "type" : "ndarray", 
+    "values" : [[1, 2], [3, 4]]
+}
+
+or, if large -> 
+{
+    "type" : "ndarray", 
+    "summary" : {
+        "size" : 100000, 
+        "min" : 0.1,
+        "max" : 9.9,
+        "mean" : 4.3
+    }
+}
+
+3. Torch tensor = torch.tensor([[1., 2.], [3., 4.]])
+Backend sends 
+{
+    "type" : "torchtensor"
+    "shape" : [2, 2],
+    "dtype" : "torch_float32",
+    "values" : [[1, 2], [3, 4]]
+}
+
+4. Neural Network = 

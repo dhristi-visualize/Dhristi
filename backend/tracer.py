@@ -42,9 +42,10 @@ def tracer(frame, event, arg):
 
     def snap_locals():
         try:
-            raw = copy.deepcopy(frame.f_locals)
-        except Exception:
+            # raw = copy.deepcopy(frame.f_locals)
             raw = dict(frame.f_locals)
+        except Exception:
+            raw = {}
         return clean_vars(raw)
         
     if event == "call":
@@ -62,7 +63,8 @@ def tracer(frame, event, arg):
             "lineno" : lineno,
             "args" : snap_locals(),
             "parent_id" : parent_id,
-            "return_value" : None
+            "return_value" : None,
+            "step_index" : len(execution_log)
         }
 
         call_stack.append(call_info)
@@ -128,6 +130,16 @@ def tracer(frame, event, arg):
         if call_stack:
             call_info = call_stack.pop()
             call_info["return_value"] = ret
+            call_info["return_step"] = len(execution_log)
+
+            #find and update the same object in call_tree
+            # its already there by reference, but being explicit
+
+            for ct_call in call_tree:
+                if ct_call["call_id"] == call_info["call_id"]:
+                    ct_call["return_value"] = ret
+                    ct_call["return_step"] = len(execution_log)
+                    break
 
         execution_log.append({
             "event": "return",

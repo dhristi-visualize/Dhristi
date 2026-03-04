@@ -1,0 +1,21 @@
+{
+  "name": "javascript",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "executor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.28.6",
+    "@babel/generator": "^7.28.6",
+    "@babel/parser": "^7.28.6",
+    "@babel/preset-env": "^7.28.6",
+    "@babel/traverse": "^7.28.6",
+    "js-interpreter": "^6.0.1"
+  }
+}

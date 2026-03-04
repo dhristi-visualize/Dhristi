@@ -3,7 +3,17 @@ import numpy as np
 import torch
 import io
 
-def safe_json(value, max_elements=30):
+def is_linked_list_node(obj):
+    return hasattr(obj, "__dict__") and "next" in obj.__dict__
+
+def safe_json(value, max_elements=30, seen=None):
+    if seen is None:
+        seen = set()
+
+    value_id = id(value)
+    if value_id in seen:
+        return {"type": "cycle"}
+
     if hasattr(value, '__class__') and 'torch.nn' in str(type(value)):
         return {
             "type" : "nn_model",
@@ -21,6 +31,33 @@ def safe_json(value, max_elements=30):
     # Handle Fraction
     if value.__class__.__name__ == 'Fraction':
         return str(value)
+    
+    # Handle linked lists
+    if is_linked_list_node(value):
+        elements = []
+        current = value
+        steps = 0
+        max_steps = 20
+
+        while current is not None and id(current) not in seen and steps < max_steps:
+            seen.add(id(current))
+
+            elements.append(
+                safe_json(getattr(current, "val", None), max_elements, seen)
+            )
+
+            current = getattr(current, "next", None)
+            steps += 1
+
+        if current is not None:
+            elements.append("⟲ cycle")
+
+        return {
+            "type": "linked_list",
+            "values": elements
+        }
+
+
     
     # Handle numpy arrays
     if isinstance(value, np.ndarray):
@@ -80,10 +117,28 @@ def safe_json(value, max_elements=30):
             except:
                 return repr(value)
     
+    # Handle user-defined objects
+    if hasattr(value, "__dict__"):
+        if id(value) in seen:
+            return {"type": "cycle"}
+
+        seen.add(id(value))
+
+        return {
+            "type": "object",
+            "class": value.__class__.__name__,
+            "fields": {
+                k: safe_json(v, max_elements, seen)
+                for k, v in value.__dict__.items()
+                if not k.startswith("__")
+            }
+        }
+
+
     # Handle regular Python objects
     try:
         # Test if it's JSON serializable
         json.dumps(value)
         return value
     except (TypeError, ValueError):
-        return repr(value)
+        return str(value)

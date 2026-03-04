@@ -17,3 +17,5 @@ def execute():
 def health():
     return {"status": "OK", "message": "Backend running"}
 
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
