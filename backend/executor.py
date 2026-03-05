@@ -11,6 +11,7 @@ from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
 from nn_extractor import extract_sequential_models, extract_manual_dense_layers, extract_weight_stack_dense
 from recursion_detector import extract_recursive_function
+from nn_runtime_tracer import trace_and_extract
 from imports import STDLIB_MODULES
 
 printed_output = []
@@ -29,6 +30,24 @@ def traced_print(*args, **kwargs):
         })
 
     sys.__stdout__.write(text + "\n")
+
+# AFTER — sanitize call_tree before returning:
+def _sanitize_call_tree(tree):
+    result = []
+    for call in tree:
+        seen = set()
+        result.append({
+            "call_id":      call.get("call_id"),
+            "func":         call.get("func"),
+            "lineno":       call.get("lineno"),
+            "parent_id":    call.get("parent_id"),
+            "step_index":   call.get("step_index"),
+            "return_step":  call.get("return_step"),
+            "args":         {k: safe_json(v, seen=seen) 
+                            for k, v in (call.get("args") or {}).items()},
+            "return_value": safe_json(call.get("return_value"), seen=seen),
+        })
+    return result
 
 def run_code(code):
     tracer.execution_log.clear()
@@ -85,7 +104,14 @@ def run_code(code):
             exec(compiled, sandbox_globals, sandbox_globals)
         finally:
             sys.settrace(None)
-
+        
+            if not nn_models:
+                try:
+                    runtime_models = trace_and_extract(code)
+                    if runtime_models:
+                        nn_models = runtime_models
+                except Exception:
+                    pass   # never let tracer crash the main response
 
             if tracer.execution_log:
                 final_locals = {}
@@ -198,14 +224,12 @@ def run_code(code):
             except Exception:
                 continue
 
-
-
         return {
-            "success": True, 
-            "steps": safe_steps, 
-            "nn_models" : nn_models,
-            "call_tree" : tracer.call_tree,
-            "recursive_funcs" : recursive_funcs
+            "success":        True,
+            "steps":          safe_steps,
+            "nn_models":      nn_models,
+            "call_tree":      _sanitize_call_tree(tracer.call_tree),
+            "recursive_funcs": recursive_funcs
         }
 
     except Exception as e:
