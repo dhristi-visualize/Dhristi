@@ -143,7 +143,7 @@ export default function VisualCanvas({
         <ScrollArea className="h-full w-full">
           <div className="flex flex-col gap-4 p-2">
             {/* Neural Networks */}
-            {nnModels && nnModels.length > 0 && (
+            {nnModels && nnModels.length > 0 && executionLog.slice(0, currentStep + 1).some(s => s.nn_ops?.length > 0) && (
               <div className="flex flex-col gap-4">
                 <div className="text-sm font-bold text-cyan-400">
                   Detected Neural Networks
@@ -154,7 +154,11 @@ export default function VisualCanvas({
                     key={idx}
                     className="rounded-xl border border-cyan-400 p-4"
                   >
-                    <NeuralNetworkVisualization model={model} />
+                    <NeuralNetworkVisualization 
+                    model={model}
+                    currentNnOps={currentStepData?.nn_ops ?? []}
+                    executionLog={executionLog}
+                    currentStep={currentStep} />
                   </Card>
                 ))}
               </div>

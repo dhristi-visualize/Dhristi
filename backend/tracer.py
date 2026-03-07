@@ -42,8 +42,12 @@ def tracer(frame, event, arg):
 
     def snap_locals():
         try:
-            # raw = copy.deepcopy(frame.f_locals)
-            raw = dict(frame.f_locals)
+            raw = {}
+            for k, v in frame.f_locals.items():
+                try:
+                    raw[k] = copy.deepcopy(v)
+                except Exception:
+                    raw[k] = v   # fallback to reference if deepcopy fails (e.g. torch tensors)
         except Exception:
             raw = {}
         return clean_vars(raw)
