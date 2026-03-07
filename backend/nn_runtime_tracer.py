@@ -334,6 +334,104 @@ def _try_patch_torch(sandbox_globals: dict, collector: TraceCollector):
 
     return restore, hooks
 
+# In nn_runtime_tracer.py — add JAX support in _build_tracing_np():
+
+def _patch_jax(collector):
+    """Patch jax.numpy matmul operations for tracing."""
+    try:
+        import jax.numpy as jnp
+    except ImportError:
+        return None
+
+    _orig_jnp_dot    = jnp.dot
+    _orig_jnp_matmul = jnp.matmul
+
+    def _jax_dot(a, b, **kwargs):
+        result = _orig_jnp_dot(a, b, **kwargs)
+        collector.record(TracedOp(
+            kind="matmul", name="jnp.dot",
+            input_shapes=[getattr(a, 'shape', ()), getattr(b, 'shape', ())],
+            output_shape=getattr(result, 'shape', ()),
+        ))
+        return result
+
+    def _jax_matmul(a, b, **kwargs):
+        result = _orig_jnp_matmul(a, b, **kwargs)
+        collector.record(TracedOp(
+            kind="matmul", name="jnp.matmul",
+            input_shapes=[getattr(a, 'shape', ()), getattr(b, 'shape', ())],
+            output_shape=getattr(result, 'shape', ()),
+        ))
+        return result
+
+    jnp.dot    = _jax_dot
+    jnp.matmul = _jax_matmul
+
+    def restore():
+        jnp.dot    = _orig_jnp_dot
+        jnp.matmul = _orig_jnp_matmul
+
+    return restore
+
+def _patch_equinox(collector):
+    try:
+        import equinox as eqx
+        import jax.numpy as jnp
+        import jax.nn as jax_nn
+    except ImportError:
+        return None
+
+    # eqx.nn.Linear is called like a function: layer(x)
+    # We wrap its __call__ to intercept input/output shapes.
+    _orig_relu = jax_nn.relu
+    _orig_linear_call = eqx.nn.Linear.__call__
+
+    def patched_linear_call(self, x, **kwargs):
+        result = _orig_linear_call(self, x, **kwargs)
+        collector.record(TracedOp(
+            kind="matmul",
+            name="eqx.Linear",
+            input_shapes=[getattr(x, 'shape', ())],
+            output_shape=getattr(result, 'shape', ()),
+        ))
+        return result
+
+    eqx.nn.Linear.__call__ = patched_linear_call
+
+    def patched_relu(x):
+        result = _orig_relu(x)
+        collector.record(TracedOp(kind="activation", name="ReLU"))
+        return result
+
+    jax_nn.relu = patched_relu
+
+    def restore():
+        eqx.nn.Linear.__call__ = _orig_linear_call
+        jax_nn.relu = _orig_relu 
+
+    return restore
+
+def _analyze_equinox_trace(ops):
+    eqx_ops = [op for op in ops if op.name.startswith("eqx.")]
+    if not eqx_ops:
+        return None
+
+    layers = []
+    for op in ops:
+        # Only process eqx linear layers and activation ops
+        # Ignore any numpy matmuls that leaked through
+        if op.name == "eqx.Linear":
+            in_f  = op.input_shapes[0][-1] if op.input_shapes and op.input_shapes[0] else None
+            out_f = op.output_shape[-1] if op.output_shape else None
+            layers.append(DetectedLayer("Linear", in_f, out_f))
+        elif op.kind == "activation" and op.name in ("ReLU", "Tanh", "Sigmoid", "Softmax"):
+            # Only named activations, not np.maximum noise
+            if not layers or layers[-1].layer_type != op.name:
+                layers.append(DetectedLayer(op.name))
+
+    if not layers:
+        return None
+    return DetectedModel("TracedEquinoxNetwork", "numpy", layers)
 
 # ---------------------------------------------------------------------------
 # Sandbox execution
@@ -401,6 +499,8 @@ def _shape_to_features(in_shape, out_shape):
 
 
 def _analyze_numpy_trace(ops: List[TracedOp]) -> Optional[DetectedModel]:
+    ops = [op for op in ops if not op.name.startswith(("eqx.", "torch.", "jnp."))]
+    
     matmul_ops = [op for op in ops if op.kind == "matmul"]
     if not matmul_ops:
         return None
@@ -461,21 +561,15 @@ def _analyze_torch_trace(ops: List[TracedOp]) -> Optional[DetectedModel]:
 # ---------------------------------------------------------------------------
 
 def trace_and_extract(code: str) -> List[dict]:
-    """
-    Execute *code* with runtime tracing active.
-    Returns a list of detected models as dicts compatible with executor.py
-    and NeuralNetworkVisualization.jsx.
-
-    Returns [] if no neural-network pattern is detected.
-    """
     _collector.clear()
     globs = _build_sandbox()
 
-    # PyTorch: patch nn.Module.__init__ BEFORE exec so every module instance
-    # created during execution is automatically hooked.
+    jax_restore = _patch_jax(_collector)
+    eqx_restore = _patch_equinox(_collector)   # ← add this
+
     torch_restore = None
     try:
-        import torch  # noqa: F401
+        import torch
         torch_restore, _ = _try_patch_torch(globs, _collector)
     except ImportError:
         pass
@@ -483,22 +577,27 @@ def trace_and_extract(code: str) -> List[dict]:
     with _patch_numpy():
         err = _safe_exec(code, globs)
 
-    # Restore torch patches
+    if jax_restore:
+        jax_restore()
+    if eqx_restore:
+        eqx_restore()                          # ← and this
     if torch_restore:
         torch_restore()
 
     if err:
         print(f"[nn_runtime_tracer] execution warning:\n{err}", file=sys.stderr)
 
-    # Prefer torch trace; fall back to numpy trace
     results = []
-    torch_model = _analyze_torch_trace(_collector.ops)
+    torch_model  = _analyze_torch_trace(_collector.ops)
+    eqx_model    = _analyze_equinox_trace(_collector.ops)  # ← and this
+    numpy_model  = _analyze_numpy_trace(_collector.ops)
+
     if torch_model:
         results.append(torch_model.to_dict())
-    else:
-        numpy_model = _analyze_numpy_trace(_collector.ops)
-        if numpy_model:
-            results.append(numpy_model.to_dict())
+    elif eqx_model:
+        results.append(eqx_model.to_dict())
+    elif numpy_model:
+        results.append(numpy_model.to_dict())
 
     _collector.clear()
     return results

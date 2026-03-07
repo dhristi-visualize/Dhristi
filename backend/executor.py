@@ -9,10 +9,28 @@ import types
 import tracer
 from ast_utils import find_candidate_expressions, get_future_flags
 from serializer import safe_json
-from nn_extractor import extract_sequential_models, extract_manual_dense_layers, extract_weight_stack_dense
+from nn_extractor import extract_sequential_models, extract_manual_dense_layers, extract_weight_stack_dense, extract_keras_functional
 from recursion_detector import extract_recursive_function
 from nn_runtime_tracer import trace_and_extract
 from imports import STDLIB_MODULES
+
+# At the top of executor.py — wrap in try/except since these may not be installed
+try:
+    import jax
+    import jax.numpy as jnp
+    import equinox as eqx
+except ImportError:
+    jax = jnp = eqx = None
+
+try:
+    import keras
+except ImportError:
+    keras = None
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
 
 printed_output = []
 
@@ -66,18 +84,21 @@ def run_code(code):
     seq = extract_sequential_models(code)
     if seq:
         nn_models = seq
-
     else:
-        # Static weight-stack inference (MULTI-LAYER)
-        stack = extract_weight_stack_dense(code)
-        if stack:
-            nn_models = stack
-
+        keras_models = extract_keras_functional(code)
+        if keras_models:
+            nn_models = keras_models
         else:
-            # Heuristic fallback (SINGLE-LAYER)
-            manual = extract_manual_dense_layers(code)
-            if manual:
-                nn_models = manual
+            # Static weight-stack inference (MULTI-LAYER)
+            stack = extract_weight_stack_dense(code)
+            if stack:
+                nn_models = stack
+
+            else:
+                # Heuristic fallback (SINGLE-LAYER)
+                manual = extract_manual_dense_layers(code)
+                if manual:
+                    nn_models = manual
 
     recursive_funcs = extract_recursive_function(code)
 
@@ -98,6 +119,16 @@ def run_code(code):
             #Standard library
             **STDLIB_MODULES
         }
+
+        # Add optional frameworks only if available
+        if jax is not None:
+            sandbox_globals.update({"jax": jax, "jnp": jnp})
+        if eqx is not None:
+            sandbox_globals["eqx"] = eqx
+        if keras is not None:
+            sandbox_globals["keras"] = keras
+        if tf is not None:
+            sandbox_globals["tf"] = tf
 
         sys.settrace(tracer.tracer)
         try:

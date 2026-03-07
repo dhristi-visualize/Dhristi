@@ -283,3 +283,67 @@ def detect_unrolled_dense_expr(expr):
 
     return None
 
+def extract_keras_functional(code: str):
+    """
+    Detects Keras Functional API pattern:
+      inputs = keras.Input(shape=(...))
+      x = layers.Dense(128, activation="relu")(inputs)
+      outputs = layers.Dense(10, activation="softmax")(x)
+      model = keras.Model(inputs=inputs, outputs=outputs)
+    """
+    tree = ast.parse(code)
+    layers = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            # Detect layers.Dense(units, activation=...) or keras.layers.Dense(...)
+            func = node.func
+            if isinstance(func, ast.Attribute) and func.attr == "Dense":
+                units = None
+                activation = None
+
+                if node.args:
+                    try:
+                        units = ast.literal_eval(node.args[0])
+                    except Exception:
+                        pass
+
+                for kw in node.keywords:
+                    if kw.arg == "activation":
+                        try:
+                            activation = ast.literal_eval(kw.value)
+                        except Exception:
+                            pass
+
+                if units is not None:
+                    layers.append({
+                        "layer": "Linear",
+                        "out": units,
+                        "in": None,   # resolved by chaining below
+                    })
+                    if activation:
+                        layers.append({"layer": activation.capitalize()})
+
+    if not layers:
+        return []
+
+    # Chain in_features from previous layer's out
+    linear_layers = [l for l in layers if l["layer"] == "Linear"]
+    for i in range(1, len(linear_layers)):
+        linear_layers[i]["in"] = linear_layers[i-1]["out"]
+
+    # Try to get input shape from keras.Input(shape=(...))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Attribute) and func.attr == "Input":
+                for kw in node.keywords:
+                    if kw.arg == "shape":
+                        try:
+                            shape = ast.literal_eval(kw.value)
+                            if linear_layers:
+                                linear_layers[0]["in"] = shape[0] if isinstance(shape, tuple) else shape
+                        except Exception:
+                            pass
+
+    return [{"model_name": "KerasFunctional", "type": "Sequential", "layers": layers}]
