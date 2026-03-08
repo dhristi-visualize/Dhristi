@@ -18,7 +18,13 @@ export default function App() {
   const [callTree, setCallTree] = useState([]);
   const [recursiveFuncs, setRecursiveFuncs] = useState([]);
   const [language] = useState("python");
+  const [fullView, setFullView] = useState(false);
 
+
+  // // Reset full view as soon as user starts stepping
+  // useEffect(() => {
+  //   if (currentStep > 0) setFullView(false);
+  // }, [currentStep]);
 
   const currentStepData = executionLog[currentStep] || null;
 
@@ -34,7 +40,6 @@ export default function App() {
     if (currentStep === 0 || !executionLog[currentStep - 1]) {
       return new Set();
     }
-
 
     const prev =
       executionLog[currentStep - 1]?.after ||
@@ -76,6 +81,7 @@ export default function App() {
     setExecutionLog([]);
     setCurrentStep(0);
     setAutoPlay(false);
+    setFullView(false);
 
     try {
       const res = await fetch("http://127.0.0.1:5000/execute", {
@@ -154,6 +160,8 @@ export default function App() {
           <Panel defaultSize={40} minSize={20}>
             <div className="h-full rounded-lg border border-neutral-800 bg-neutral-800 overflow-auto">
               <VisualCanvas
+                fullView={fullView}
+                setFullView={setFullView}
                 executionLog={executionLog}
                 currentStep={currentStep}
                 currentStepData={currentStepData}

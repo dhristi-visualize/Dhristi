@@ -20,6 +20,8 @@ export default function VisualCanvas({
   callTree,
   recursiveFuncs,
   currentStep,
+  fullView, 
+  setFullView,
 }) {
   // const visibleCallTree = callTree.filter(
   //   c => (c.step_index ?? 0) <= currentStep
@@ -130,7 +132,21 @@ export default function VisualCanvas({
 
   return (
     <Card className="h-full bg-neutral-800 border border-neutral-700 p-4">
-      <div className="mb-3 font-semibold text-gray-100">Visual Canvas</div>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-semibold text-gray-100">Visual Canvas</span>
+        {nnModels?.length > 0 && (
+          <button
+            onClick={() => setFullView(v => !v)}
+              className={`text-xs px-3 py-1 rounded border font-mono transition-all ${
+                fullView
+                  ? "bg-cyan-500 text-black border-cyan-400"
+                  : "border-slate-600 text-slate-400 hover:border-cyan-500 hover:text-cyan-400"
+              }`}
+          >
+            ⊙ Full View
+          </button>
+        )}
+      </div>
 
       {executionLog.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[400px] gap-2">
@@ -143,7 +159,7 @@ export default function VisualCanvas({
         <ScrollArea className="h-full w-full">
           <div className="flex flex-col gap-4 p-2">
             {/* Neural Networks */}
-            {nnModels && nnModels.length > 0 && executionLog.slice(0, currentStep + 1).some(s => s.nn_ops?.length > 0) && (
+            {nnModels?.length > 0 && (fullView || executionLog.slice(0, currentStep + 1).some(s => s.nn_ops?.length > 0)) && (
               <div className="flex flex-col gap-4">
                 <div className="text-sm font-bold text-cyan-400">
                   Detected Neural Networks
@@ -158,7 +174,8 @@ export default function VisualCanvas({
                     model={model}
                     currentNnOps={currentStepData?.nn_ops ?? []}
                     executionLog={executionLog}
-                    currentStep={currentStep} />
+                    currentStep={currentStep}
+                    fullView={fullView} />
                   </Card>
                 ))}
               </div>
